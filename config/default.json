@@ -1,0 +1,5 @@
+{
+  "mongoURI": "mongodb+srv://tobi123:tobi123@fabricstore-znobo.mongodb.net/test?retryWrites=true&w=majority",
+  "jwtSecret": "mySecret",
+  "jwtAdminSecret": "AdminSecret"
+}
