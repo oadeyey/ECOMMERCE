@@ -1,7 +1,7 @@
-const express = require("express");
-const Product = require("../models/Product");
-const { check, validationResult } = require("express-validator");
-const adminauth = require("../middleware/adminauth");
+const express = require('express');
+const Product = require('../models/Product');
+const { check, validationResult } = require('express-validator');
+const adminauth = require('../middleware/adminauth');
 
 const router = express.Router();
 
@@ -10,17 +10,13 @@ const router = express.Router();
 //@desc Insert Product
 //@access Public
 router.post(
-  "/addproduct",
+  '/addproduct',
   [
     adminauth,
     [
-      check("Title", "Product Title is required")
-        .not()
-        .isEmpty(),
-      check("Price", "Price is required").isNumeric(),
-      check("Category", "Enter at least One Category")
-        .not()
-        .isEmpty()
+      check('Title', 'Product Title is required').not().isEmpty(),
+      check('Price', 'Price is required').isNumeric(),
+      check('Category', 'Enter at least One Category').not().isEmpty()
     ]
   ],
   async (req, res) => {
@@ -44,7 +40,7 @@ router.post(
 
       res.json({ product });
     } catch (err) {
-      res.status(500).send("Server Error");
+      res.status(500).send('Server Error');
       console.error(err.message);
     }
   }
@@ -54,21 +50,52 @@ router.post(
 //@route  PUT '/ecom/products/:product_id'
 //@desc   Update Product
 //@access Private
-router.put("/:product_id", adminauth, (req, res) => {});
+router.put('/:product_id', adminauth, async (req, res) => {
+  const { Title, Price, Category, Image, Quantity } = req.body;
+
+  const ProductDetails = {
+    Title,
+    Price,
+    Category
+  };
+  if (Image) {
+    ProductDetails.Image = Image;
+  }
+  if (Quantity) {
+    ProductDetails.Quantity = Quantity;
+  }
+  try {
+    let product = await Product.findById(req.params.product_id);
+
+    if (!product) {
+      res.status(400).json({ error: [{ msg: 'Product Does not exist' }] });
+    }
+
+    product = await Product.findOneAndUpdate(
+      { id: req.params.product_id },
+      { $set: ProductDetails },
+      { new: true }
+    );
+    res.json({ product });
+  } catch (err) {
+    console.error(err.msg);
+    res.status(500).send('Server Error');
+  }
+});
 
 //Delete Products Route
 //@route  DELETE '/ecom/products/:product_id'
 //@desc   Delete Product
 //@access Private
-router.delete("/:product_id", adminauth, (req, res) => {});
+router.delete('/:product_id', adminauth, (req, res) => {});
 
 //Display Products Route
 //@route  GET '/ecom/products'
 //@desc   Get all products
 //@access Public
-router.get("/", (req, res) => {
-  const products = Product.find();
-  res.json(products);
+router.get('/', async (req, res) => {
+  const products = await Product.find();
+  res.json({ products });
 });
 
 //Export Router
