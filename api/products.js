@@ -53,17 +53,15 @@ router.post(
 router.put('/:product_id', adminauth, async (req, res) => {
   const { Title, Price, Category, Image, Quantity } = req.body;
 
-  const ProductDetails = {
+  let newProduct = {
     Title,
     Price,
-    Category
+    Category,
+    Image,
+    Quantity
   };
-  if (Image) {
-    ProductDetails.Image = Image;
-  }
-  if (Quantity) {
-    ProductDetails.Quantity = Quantity;
-  }
+  console.log(req.params.product_id);
+  console.log(newProduct);
   try {
     let product = await Product.findById(req.params.product_id);
 
@@ -71,12 +69,30 @@ router.put('/:product_id', adminauth, async (req, res) => {
       res.status(400).json({ error: [{ msg: 'Product Does not exist' }] });
     }
 
-    product = await Product.findOneAndUpdate(
-      { id: req.params.product_id },
-      { $set: ProductDetails },
+    // product.Title = Title;
+    // product.Price = Price;
+    // product.Category = Category;
+    // if (Image) {
+    //   product.Image = Image;
+    // }
+    // if (Quantity) {
+    //   product.Quantity = Quantity;
+    // }
+
+    if (!Image && product.Image) {
+      newProduct.Image = product.Image;
+    }
+    if (!Quantity && product.Quantity) {
+      newProduct.Quantity = product.Quantity;
+    }
+
+    const upProduct = await Product.findOneAndUpdate(
+      { _id: req.params.product_id },
+      { $set: newProduct },
       { new: true }
     );
-    res.json({ product });
+    console.log(upProduct);
+    res.json(upProduct);
   } catch (err) {
     console.error(err.msg);
     res.status(500).send('Server Error');
@@ -87,7 +103,21 @@ router.put('/:product_id', adminauth, async (req, res) => {
 //@route  DELETE '/ecom/products/:product_id'
 //@desc   Delete Product
 //@access Private
-router.delete('/:product_id', adminauth, (req, res) => {});
+router.delete('/:product_id', adminauth, async (req, res) => {
+  try {
+    let product = await Product.findById(req.params.product_id);
+
+    if (!product) {
+      res.status(404).json({ msg: 'Product not found' });
+    }
+    product.remove();
+
+    res.json({ msg: 'Product Deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 //Display Products Route
 //@route  GET '/ecom/products'
